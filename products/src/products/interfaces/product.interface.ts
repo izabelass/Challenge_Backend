@@ -2,9 +2,9 @@ export class Product {
   title: string;
   description: string;
   price: number;
-  discountPercentage: 12.96;
-  rating: 4.69;
-  stock: 94;
+  discountPercentage: number;
+  rating: number;
+  stock: number;
   brand: string;
   category: string;
   thumbnail: string;
