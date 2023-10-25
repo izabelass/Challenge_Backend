@@ -1,20 +1,29 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Controller } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import {
-  Ctx,
   MessagePattern,
   Payload,
-  RedisContext,
 } from '@nestjs/microservices';
 import { Product } from './interfaces/product.interface';
+import { ProductDto } from './dtos/product.dto';
 
-@Controller('products')
+@Controller()
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @MessagePattern('products')
-  getProducts(@Payload() data: Product, @Ctx() context: RedisContext) {
-    return this.productsService.getAllProducts();
+  async getProducts(@Payload() data: ProductDto): Promise<Product[]> {
+    console.log('controller foi acessado no products')
+    return await this.productsService.getAllProducts();
+  }
+
+  @MessagePattern('productById')
+  async getProductById(@Payload() data: ProductDto): Promise<Product[]> {
+    return await this.productsService.getProductById(data.id);
+  }
+
+  @MessagePattern('filterProducts')
+  async filterProducts(@Payload() query: string): Promise<Product[]> {
+    return await this.productsService.filterProducts(query);
   }
 }

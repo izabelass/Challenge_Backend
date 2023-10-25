@@ -1,4 +1,5 @@
-export class Product {
+export class ProductDto {
+  id: number;
   title: string;
   description: string;
   price: number;

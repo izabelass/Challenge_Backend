@@ -1,74 +1,67 @@
 version: "3.3"
 services:
-  redis:
-    container_name: redis
-    image: redis:alpine
-    restart: unless-stopped
-    volumes:
-      - redis_data:/data
-    environment:
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
-    ports:
-      - 6379:6379
-    networks:
-      - backend-network
-  products:
-    container_name: products
-    restart: unless-stopped
+  redis-server:
+      image: redis
+      container_name: redis
+      ports: 
+        - "6379:6379"
+      volumes: 
+        - ./redis-service/config/redis.conf:/redis.conf
+        # - ./redis-data:/redis.conf
+      command: [ "redis-server", "/redis.conf" ]
+      networks: 
+        - backend-network
+
+  api-gateway:
+    container_name: api-gateway
     build:
-      args:
+      args: 
         - NODE_ENV=development
-      context: .
+      context: ./api-gateway
     command: node dist/main.js
     ports:
       - 3001:3001
+    restart: unless-stopped
     links:
-      - redis
-      - api-gateway
+      - redis-server
     depends_on:
-      - redis
-      - api-gateway
+      - redis-server
     volumes:
       - type: bind
-        source: ${PUBLIC_FOLDER}
+        source: ./public
         target: /home/node/api/public
         volume:
           nocopy: true
       - /etc/localtime:/etc/localtime:ro
     working_dir: /home/node/api
-    networks:
+    networks: 
       - backend-network
-  api-gateway:
-    container_name: api-gateway
-    restart: unless-stopped
+  products-service:
+    container_name: products-service
     build:
-      args:
+      args: 
         - NODE_ENV=development
-      context: .
+      context: ./products
     command: node dist/main.js
     ports:
       - 3002:3002
+    restart: unless-stopped
     links:
-      - redis
-      - products
+      - redis-server
     depends_on:
-      - redis
-      - products
+      - redis-server
     volumes:
       - type: bind
-        source: ${PUBLIC_FOLDER}
+        source: ./public
         target: /home/node/api/public
         volume:
           nocopy: true
       - /etc/localtime:/etc/localtime:ro
     working_dir: /home/node/api
-    networks:
+    networks: 
       - backend-network
-
+ 
 networks:
   backend-network:
-
 volumes:
   data_volume:
-  redis_data:
