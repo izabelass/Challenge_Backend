@@ -1,0 +1,74 @@
+version: "3.3"
+services:
+  redis:
+    container_name: redis
+    image: redis:alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    environment:
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+    ports:
+      - 6379:6379
+    networks:
+      - backend-network
+  products:
+    container_name: products
+    restart: unless-stopped
+    build:
+      args:
+        - NODE_ENV=development
+      context: .
+    command: node dist/main.js
+    ports:
+      - 3001:3001
+    links:
+      - redis
+      - api-gateway
+    depends_on:
+      - redis
+      - api-gateway
+    volumes:
+      - type: bind
+        source: ${PUBLIC_FOLDER}
+        target: /home/node/api/public
+        volume:
+          nocopy: true
+      - /etc/localtime:/etc/localtime:ro
+    working_dir: /home/node/api
+    networks:
+      - backend-network
+  api-gateway:
+    container_name: api-gateway
+    restart: unless-stopped
+    build:
+      args:
+        - NODE_ENV=development
+      context: .
+    command: node dist/main.js
+    ports:
+      - 3002:3002
+    links:
+      - redis
+      - products
+    depends_on:
+      - redis
+      - products
+    volumes:
+      - type: bind
+        source: ${PUBLIC_FOLDER}
+        target: /home/node/api/public
+        volume:
+          nocopy: true
+      - /etc/localtime:/etc/localtime:ro
+    working_dir: /home/node/api
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+
+volumes:
+  data_volume:
+  redis_data:
